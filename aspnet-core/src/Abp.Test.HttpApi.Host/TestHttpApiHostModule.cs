@@ -12,6 +12,7 @@ using Abp.Test.EntityFrameworkCore;
 using Abp.Test.MultiTenancy;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic;
 using Microsoft.OpenApi.Models;
+using Rebus.Config;
 using Volo.Abp;
 using Volo.Abp.Account;
 using Volo.Abp.Account.Web;
@@ -23,6 +24,7 @@ using Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
 using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
+using Volo.Abp.EventBus.Rebus;
 using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
 using Volo.Abp.Swashbuckle;
@@ -41,10 +43,25 @@ namespace Abp.Test;
     typeof(AbpAspNetCoreAuthenticationJwtBearerModule),
     typeof(AbpAccountWebIdentityServerModule),
     typeof(AbpAspNetCoreSerilogModule),
-    typeof(AbpSwashbuckleModule)
+    typeof(AbpSwashbuckleModule),
+    typeof(AbpEventBusRebusModule)
 )]
 public class TestHttpApiHostModule : AbpModule
 {
+    public override void PreConfigureServices(ServiceConfigurationContext context)
+    {
+        PreConfigure<AbpRebusEventBusOptions>(options =>
+        {
+            var queueName = "eventbus";
+            options.InputQueueName = queueName;
+            options.Configurer = rebusConfigurer =>
+            {
+                rebusConfigurer.Transport(t => t.UseRabbitMq("amqp://localhost", queueName));
+                // rebusConfigurer.Subscriptions(s => s.UseJsonFile(@"subscriptions.json"));
+            };
+        });
+    }
+    
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         var configuration = context.Services.GetConfiguration();

@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:14.3
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=Test
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "0.0.0.0:5432:5432"
+
+  db_admin:
+    image: adminer
+    ports:
+      - "0.0.0.0:9080:8080"
+
+  cache:
+    image: redis:6
+    ports:
+      - "0.0.0.0:6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3.10.1-management
+    hostname: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "0.0.0.0:5672:5672"
+      - "0.0.0.0:9081:15672"
+
+volumes:
+  db_data:
